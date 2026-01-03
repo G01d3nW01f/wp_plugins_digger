@@ -5,19 +5,26 @@ import requests
 from urllib.parse import urljoin
 import sys
 
-
 if len(sys.argv) != 2:
-    print("[!]Require: argument <target URL>")
-    sys.exit()
+    print("[!] Require: argument <target URL>")
+    sys.exit(1)
 
 url = sys.argv[1]
 
 response = requests.get(url)
-#response.raise_for_status()
-
 html = response.text
 
-matches = re.findall(r'/wp-content/plugins/[^"\'<>\s]+', html)
+# capture the plugin name
+pattern = r'/wp-content/plugins/([^/]+)/'
 
-for m in set(matches):
-    print(urljoin(url,m))
+matches = re.findall(pattern, html)
+
+# delete the duplication
+plugins = sorted(set(matches))
+
+for plugin in plugins:
+    plugin_path = f"/wp-content/plugins/{plugin}/"
+    absolute_url = urljoin(url, plugin_path)
+
+    print(absolute_url)
+    print(f"  └ Plugin: {plugin}")
